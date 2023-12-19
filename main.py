@@ -1,41 +1,28 @@
-import os
-import redis
-from dotenv import load_dotenv
+import time
+import json
+from redis_json import Redis
 
-load_dotenv()
-
-
-class Redis:
-    def __init__(self):
-        self.redis = redis.Redis(host=os.getenv('RedisHost'), port=os.getenv('RedisPort'))
-
-    def setData(self, key, value, time=None):
-        self.redis.json().set(path="$", name=key, obj=value)
-        if time is not None:
-            self.redis.expire(key, time)
-
-    def getData(self, key):
-        return self.redis.json().get(name=key)
-
-    def deleteData(self, key):
-        if self.redis.exists(key):
-            self.redis.delete(key)
-
-    def clearData(self):
-        self.redis.flushall()
+redis = Redis()
 
 
-# if __name__ == '__main__':
-#     data = {
-#         "name": 'deneme',
-#         "id": 1,
-#         "email": "deneme@gmail.com",
-#         "password": "deneme",
-#     }
-#     rds = Redis()
-#     rds.setData('one', data)
-#     rds.setData('two', data, os.getenv('RedisCacheTime'))
-    # print(rds.getData('one'))
-    # rds.deleteData('two')
-    # rds.deleteData('to')
-    # rds.clearData()
+def pub(count):
+    for i in range(0, count):
+        data = {"Key": f"Value_{str(i)}"}
+        redis.setData(key="deneme-datası", value=data)
+        redis.publish(channel="deneme", message=json.dumps(data))
+        time.sleep(5)
+
+
+def sub_func(data):
+    print(json.loads(data))
+
+
+def sub():
+    redis.subscribe(channel="deneme", func=sub_func)
+
+
+if __name__ == "__main__":
+    sub()
+    sub()
+    sub()
+    pub(100)
