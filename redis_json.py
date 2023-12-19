@@ -3,10 +3,14 @@ import ast
 import redis
 import logging
 import threading
+from config.conf import Config
 from dotenv import load_dotenv
 from redis.sentinel import Sentinel
 
 load_dotenv()
+
+conf_cls = Config()
+config = conf_cls()
 
 
 class Redis:
@@ -44,7 +48,7 @@ class Redis:
             logging.error("Failed to connect to Redis. Error Occurred: {}".format(str(e)))
 
     def check_redis_type(self):
-        use_redis_type = os.getenv("UseRedisType", None)
+        use_redis_type = config.get('file_config', {}).get('redis_config', {}).get('use_redis_type', None)
         if use_redis_type:
             return use_redis_type
         else:

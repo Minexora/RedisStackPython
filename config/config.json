@@ -1,0 +1,5 @@
+{
+    "redis_config": {
+        "use_redis_type": "default"
+    }
+}
