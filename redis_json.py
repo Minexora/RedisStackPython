@@ -14,13 +14,29 @@ config = conf_cls()
 
 
 class Redis:
+    use_redis_type = None
+    sentinel = None
+    redis_host = None
+    redis_port = None
+    connection_timeout_ms = None
+    master_alias = None
+    password = None
+
+    def get_conf(self):
+        import json
+        print(json.dumps({"use_redis_type": self.use_redis_type, "redis_host": self.redis_host, "redis_port": self.redis_port, "connection_timeout_ms": self.connection_timeout_ms, "sentinel": self.sentinel, "master_alias": self.master_alias, "password": self.password}, indent=4))
+
     def __init__(self):
         try:
             use_redis_type = self.check_redis_type()
+            self.use_redis_type = use_redis_type
             if use_redis_type is None or use_redis_type == "default":
                 redis_host = os.getenv("RedisHost", None)
+                self.redis_host = redis_host
                 redis_port = os.getenv("RedisPort", None)
+                self.redis_port = redis_port
                 connection_timeout_ms = os.getenv("RedisConnectionTimeoutMs", 15000)
+                self.connection_timeout_ms = connection_timeout_ms
                 if redis_host and redis_port:
                     self.redis = redis.Redis(host=redis_host, port=redis_port, socket_timeout=int(connection_timeout_ms))
                     if self.redis.ping():
@@ -32,9 +48,13 @@ class Redis:
                     logging.error("Failed to connect to Redis. Host and Port information not found!")
             elif use_redis_type == "sentinel":
                 sentinel = os.getenv("REDIS_SENTINEL", None)
+                self.sentinel = ast.literal_eval(sentinel)
                 master_alias = os.getenv("REDIS_MASTER_ALIAS", None)
+                self.master_alias = master_alias
                 password = os.getenv("REDIS_PASSWORD", None)
+                self.password = password
                 connection_timeout_ms = os.getenv("RedisConnectionTimeoutMs", 15000)
+                self.connection_timeout_ms = connection_timeout_ms
                 redis_sentinel = Sentinel(ast.literal_eval(sentinel), password=password, socket_timeout=int(connection_timeout_ms))
                 self.redis = redis_sentinel.master_for(master_alias, socket_timeout=int(connection_timeout_ms))
                 if self.redis.ping():
@@ -48,7 +68,7 @@ class Redis:
             logging.error("Failed to connect to Redis. Error Occurred: {}".format(str(e)))
 
     def check_redis_type(self):
-        use_redis_type = config.get('file_config', {}).get('redis_config', {}).get('use_redis_type', None)
+        use_redis_type = config.get("file_config", {}).get("redis_config", {}).get("use_redis_type", None)
         if use_redis_type:
             return use_redis_type
         else:

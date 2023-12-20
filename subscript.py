@@ -3,7 +3,7 @@ import json
 from redis_json import Redis
 
 redis = Redis()
-
+print(redis.get_conf())
 
 def sub_func(data):
     print(json.loads(data))
